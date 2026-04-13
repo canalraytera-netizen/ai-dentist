@@ -1,35 +1,36 @@
 const fs = require('fs');
 const path = require('path');
 
-// Копируем папку public в .next/standalone/public
+console.log('🚀 Starting to copy public files...');
+
 const publicDir = path.join(__dirname, 'public');
+// Это та самая "правильная" папка на сервере
 const targetDir = path.join(__dirname, '.next', 'standalone', 'public');
 
 if (fs.existsSync(publicDir)) {
-  // Создаём папку назначения
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
-  }
-  
-  // Копируем файлы
-  const copyRecursive = (src, dest) => {
-    const entries = fs.readdirSync(src, { withFileTypes: true });
-    for (let entry of entries) {
-      const srcPath = path.join(src, entry.name);
-      const destPath = path.join(dest, entry.name);
-      if (entry.isDirectory()) {
-        if (!fs.existsSync(destPath)) {
-          fs.mkdirSync(destPath, { recursive: true });
-        }
-        copyRecursive(srcPath, destPath);
-      } else {
-        fs.copyFileSync(srcPath, destPath);
-      }
+    if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
     }
-  };
-  
-  copyRecursive(publicDir, targetDir);
-  console.log('✅ Public files copied to .next/standalone/public');
+
+    // Функция для рекурсивного копирования всех файлов и папок
+    const copyRecursiveSync = (src, dest) => {
+        const entries = fs.readdirSync(src, { withFileTypes: true });
+        for (let entry of entries) {
+            const srcPath = path.join(src, entry.name);
+            const destPath = path.join(dest, entry.name);
+            if (entry.isDirectory()) {
+                if (!fs.existsSync(destPath)) {
+                    fs.mkdirSync(destPath, { recursive: true });
+                }
+                copyRecursiveSync(srcPath, destPath);
+            } else {
+                fs.copyFileSync(srcPath, destPath);
+            }
+        }
+    };
+
+    copyRecursiveSync(publicDir, targetDir);
+    console.log('✅ Successfully copied public files to .next/standalone/public');
 } else {
-  console.log('⚠️ public folder not found');
+    console.log('⚠️ public folder not found, skipping copy.');
 }
