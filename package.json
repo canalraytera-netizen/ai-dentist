@@ -1,35 +1,45 @@
-const fs = require('fs');
-const path = require('path');
-
-// Копируем папку public в .next/standalone/public
-const publicDir = path.join(__dirname, 'public');
-const targetDir = path.join(__dirname, '.next', 'standalone', 'public');
-
-if (fs.existsSync(publicDir)) {
-  // Создаём папку назначения
-  if (!fs.existsSync(targetDir)) {
-    fs.mkdirSync(targetDir, { recursive: true });
+{
+  "name": "ai-dentist",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "set NEXT_DISABLE_TURBOPACK=1 && next dev -p 3005",
+    "build": "next build && node copy-public.js",
+    "start": "next start -p 3005",
+    "lint": "eslint"
+  },
+  "dependencies": {
+    "@fal-ai/client": "^1.9.5",
+    "@google-cloud/translate": "^9.3.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
+    "@types/three": "^0.183.1",
+    "axios": "^1.14.0",
+    "canvas": "^3.2.3",
+    "framer-motion": "^12.38.0",
+    "google-spreadsheet": "^3.3.0",
+    "html2canvas": "^1.4.1",
+    "jspdf": "^4.2.1",
+    "next": "16.2.1",
+    "openai": "^6.33.0",
+    "react": "19.2.4",
+    "react-dom": "19.2.4",
+    "react-intersection-observer": "^10.0.3",
+    "react-markdown": "^10.1.0",
+    "react-webcam": "^7.2.0",
+    "three": "^0.183.2",
+    "uuid": "^13.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/postcss": "^4",
+    "@types/google-spreadsheet": "^3.3.2",
+    "@types/node": "^20.19.39",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/uuid": "^10.0.0",
+    "eslint": "^9",
+    "eslint-config-next": "16.2.1",
+    "tailwindcss": "^4",
+    "typescript": "^5"
   }
-  
-  // Копируем файлы
-  const copyRecursive = (src, dest) => {
-    const entries = fs.readdirSync(src, { withFileTypes: true });
-    for (let entry of entries) {
-      const srcPath = path.join(src, entry.name);
-      const destPath = path.join(dest, entry.name);
-      if (entry.isDirectory()) {
-        if (!fs.existsSync(destPath)) {
-          fs.mkdirSync(destPath, { recursive: true });
-        }
-        copyRecursive(srcPath, destPath);
-      } else {
-        fs.copyFileSync(srcPath, destPath);
-      }
-    }
-  };
-  
-  copyRecursive(publicDir, targetDir);
-  console.log('✅ Public files copied to .next/standalone/public');
-} else {
-  console.log('⚠️ public folder not found');
 }
