@@ -1148,7 +1148,7 @@ export default function Home() {
     "Аватар стоматолога в стиле 3D", 
     "Баннер для Instagram клиники"
   ];
-  const demoImages = ["/images/dentist-1.jpg", "/images/dentist-2.jpg", "/images/dentist-3.jpg", "/images/dentist-4.jpg"];
+  const demoImages = ["https://s3.twcstorage.ru/images-dental/dentist-1.jpg", "https://s3.twcstorage.ru/images-dental/dentist-2.jpg", "https://s3.twcstorage.ru/images-dental/dentist-3.jpg", "https://s3.twcstorage.ru/images-dental/dentist-4.jpg"];
 
   const handleFileUpload = async (type: "blood" | "xray" | "oral", file: File, setFile: (f: File | null) => void, setPreview: (url: string | null) => void) => {
     setFile(file);
@@ -1303,7 +1303,7 @@ export default function Home() {
 
       <section style={{ padding: isMobile ? "10px 15px" : "20px 20px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <img src="/images/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
+          <img src="https://s3.twcstorage.ru/images-dental/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
         </div>
       </section>
 
