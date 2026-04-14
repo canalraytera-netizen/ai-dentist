@@ -1238,7 +1238,7 @@ export default function Home() {
 
       <section style={{ padding: isMobile ? "10px 15px" : "20px 20px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <img src="/images/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
+          <img src="https://s3.twcstorage.ru/images-dental/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
         </div>
       </section>
 
