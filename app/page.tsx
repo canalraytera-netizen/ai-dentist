@@ -75,11 +75,12 @@ const ScrollReveal = ({ children, delay = 0 }: { children: React.ReactNode; dela
   );
 };
 
-// ========== AI АССИСТЕНТ (БЕЗ ГОЛОСОВОГО ПРИВЕТСТВИЯ) ==========
+// ========== AI АССИСТЕНТ ==========
 function AIAssistant({ onAction, darkMode }: { onAction: (action: string) => void; darkMode: boolean }) {
   const [message, setMessage] = useState("Привет! Я ваш AI-помощник 👋");
   const [emotion, setEmotion] = useState("neutral");
   const [isOpen, setIsOpen] = useState(true);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const actions = [
     { id: "chat", emoji: "💬", label: "Задать вопрос" },
@@ -88,6 +89,22 @@ function AIAssistant({ onAction, darkMode }: { onAction: (action: string) => voi
     { id: "voice", emoji: "🎤", label: "Голосовой ввод" },
     { id: "edit", emoji: "🖼️", label: "Изменить фото" },
   ];
+
+  const speakWelcome = () => {
+    if (isSpeaking) return;
+    const utterance = new SpeechSynthesisUtterance("Привет! Я ваш AI-помощник. Чем могу помочь?");
+    utterance.lang = "ru-RU";
+    utterance.rate = 0.9;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(utterance);
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(speakWelcome, 1500);
+    return () => clearTimeout(timer);
+  }, []);
 
   const handleAction = (actionId: string) => {
     setEmotion("happy");
@@ -143,7 +160,7 @@ function AIAssistant({ onAction, darkMode }: { onAction: (action: string) => voi
         border: `1px solid ${darkMode ? "#555" : "#eee"}`,
       }}>
         <p style={{ margin: 0, fontSize: 14, color: darkMode ? "#fff" : "#333" }}>
-          {message}
+          {message} {isSpeaking && "🔊"}
         </p>
         <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 12 }}>
           {actions.map(action => (
@@ -316,7 +333,7 @@ function BeforeAfter({ darkMode }: { darkMode: boolean }) {
   );
 }
 
-// ========== КОМПОНЕНТ PHOTA EDIT (РАБОЧИЙ) ==========
+// ========== КОМПОНЕНТ PHOTA EDIT ==========
 function PhotaEdit({ darkMode }: { darkMode: boolean }) {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [editedImage, setEditedImage] = useState<string | null>(null);
@@ -776,16 +793,18 @@ export default function Home() {
   const [authLoading, setAuthLoading] = useState(false);
   const [user, setUser] = useState<{ email: string; name: string; plan: string } | null>(null);
 
+  // Cookie consent
+  const [showCookieConsent, setShowCookieConsent] = useState(false);
+
   const sendSoundRef = useRef<HTMLAudioElement | null>(null);
   const receiveSoundRef = useRef<HTMLAudioElement | null>(null);
 
-  // Голосовое приветствие при первом заходе (только одно)
+  // Голосовое приветствие при первом заходе
   const [hasGreeted, setHasGreeted] = useState(false);
 
   useEffect(() => {
     const greeted = localStorage.getItem("hasGreeted");
     if (!greeted) {
-      // Даём время на загрузку голосов
       const loadVoicesAndSpeak = () => {
         const utterance = new SpeechSynthesisUtterance("Здравствуйте! Я ваш персональный помощник в мире стоматологии. Я помогу вам стать топ-специалистом и получить тысячи клиентов!");
         utterance.lang = "ru-RU";
@@ -793,7 +812,6 @@ export default function Home() {
         utterance.pitch = 0.9;
         utterance.volume = 1;
         
-        // Пытаемся найти мужской русский голос
         const voices = window.speechSynthesis.getVoices();
         let selectedVoice = voices.find(voice => 
           voice.lang === "ru-RU" && 
@@ -826,6 +844,19 @@ export default function Home() {
     }
   }, []);
 
+  // Cookie consent
+  useEffect(() => {
+    const consent = localStorage.getItem("cookieConsent");
+    if (!consent) {
+      setTimeout(() => setShowCookieConsent(true), 1000);
+    }
+  }, []);
+
+  const acceptCookies = () => {
+    localStorage.setItem("cookieConsent", "true");
+    setShowCookieConsent(false);
+  };
+
   useEffect(() => {
     const savedUser = localStorage.getItem("user");
     if (savedUser) {
@@ -840,6 +871,15 @@ export default function Home() {
   const handleRegister = async () => {
     if (!authEmail.trim()) {
       alert("Введите email");
+      return;
+    }
+
+    // Проверка согласий
+    const acceptOferta = (document.getElementById("acceptOferta") as HTMLInputElement)?.checked;
+    const acceptPrivacy = (document.getElementById("acceptPrivacy") as HTMLInputElement)?.checked;
+
+    if (!acceptOferta || !acceptPrivacy) {
+      alert("Для регистрации необходимо принять условия Пользовательского соглашения и дать согласие на обработку персональных данных");
       return;
     }
 
@@ -1108,7 +1148,7 @@ export default function Home() {
     "Аватар стоматолога в стиле 3D", 
     "Баннер для Instagram клиники"
   ];
-  const demoImages = ["https://s3.twcstorage.ru/images-dental/dentist-1.jpg", "https://s3.twcstorage.ru/images-dental/dentist-2.jpg", "https://s3.twcstorage.ru/images-dental/dentist-3.jpg", "https://s3.twcstorage.ru/images-dental/dentist-4.jpg"];
+  const demoImages = ["/images/dentist-1.jpg", "/images/dentist-2.jpg", "/images/dentist-3.jpg", "/images/dentist-4.jpg"];
 
   const handleFileUpload = async (type: "blood" | "xray" | "oral", file: File, setFile: (f: File | null) => void, setPreview: (url: string | null) => void) => {
     setFile(file);
@@ -1205,6 +1245,31 @@ export default function Home() {
   return (
     <main style={{ fontFamily: "Arial", overflowX: "hidden", background: bgColor, minHeight: "100vh" }}>
       
+      {/* Cookie Consent уведомление */}
+      {showCookieConsent && (
+        <div style={{
+          position: "fixed",
+          bottom: 20,
+          left: "50%",
+          transform: "translateX(-50%)",
+          background: darkMode ? "#2d2d2d" : "#fff",
+          border: `1px solid ${borderColor}`,
+          borderRadius: 12,
+          padding: "12px 20px",
+          display: "flex",
+          gap: 15,
+          alignItems: "center",
+          zIndex: 2000,
+          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          flexWrap: "wrap",
+          justifyContent: "center",
+        }}>
+          <span style={{ fontSize: 13, color: textColor }}>🍪 Мы используем cookie для улучшения работы сайта</span>
+          <button onClick={acceptCookies} style={{ background: "#667eea", color: "#fff", border: "none", borderRadius: 20, padding: "6px 16px", cursor: "pointer", fontSize: 12 }}>Принять</button>
+          <a href="/cookies" target="_blank" style={{ color: "#667eea", fontSize: 12 }}>Подробнее</a>
+        </div>
+      )}
+      
       <ContactSection darkMode={darkMode} />
       
       <div style={{ position: "fixed", top: 20, right: 20, zIndex: 1000, display: "flex", gap: 10 }}>
@@ -1238,7 +1303,7 @@ export default function Home() {
 
       <section style={{ padding: isMobile ? "10px 15px" : "20px 20px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <img src="https://s3.twcstorage.ru/images-dental/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
+          <img src="/images/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
         </div>
       </section>
 
@@ -1425,8 +1490,32 @@ export default function Home() {
             </div>
           </div>
         </section>
+
+        {/* Футер с юридическими ссылками */}
+        <footer style={{
+          borderTop: `1px solid ${borderColor}`,
+          padding: "30px 20px",
+          background: cardBg,
+          marginTop: 40,
+        }}>
+          <div style={{ maxWidth: 1100, margin: "0 auto", textAlign: "center" }}>
+            <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap", marginBottom: 15 }}>
+              <a href="/oferta" target="_blank" style={{ color: "#667eea", textDecoration: "none", fontSize: 13 }}>Пользовательское соглашение</a>
+              <a href="/privacy" target="_blank" style={{ color: "#667eea", textDecoration: "none", fontSize: 13 }}>Политика конфиденциальности</a>
+              <a href="/cookies" target="_blank" style={{ color: "#667eea", textDecoration: "none", fontSize: 13 }}>Политика cookie</a>
+            </div>
+            <p style={{ fontSize: 12, color: textSecondary, margin: 0 }}>
+              ⚠️ Сайт предназначен для лиц старше 16 лет. Информация, предоставляемая AI, не является медицинской консультацией. 
+              Перед принятием любых решений, связанных со здоровьем, проконсультируйтесь с врачом.
+            </p>
+            <p style={{ fontSize: 11, color: textSecondary, marginTop: 10 }}>
+              © 2025 DentAI PRO. Все права защищены.
+            </p>
+          </div>
+        </footer>
       </div>
 
+      {/* Модальное окно регистрации */}
       {showAuthModal && (
         <div style={{
           position: "fixed",
@@ -1474,6 +1563,18 @@ export default function Home() {
               <option value="pro">⭐ Профи (15 000 ₽/мес)</option>
               <option value="business">💎 Бизнес (индивидуально)</option>
             </select>
+            
+            {/* Чекбоксы согласий */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: textColor, marginBottom: 10 }}>
+                <input type="checkbox" required id="acceptOferta" />
+                Я принимаю условия <a href="/oferta" target="_blank" style={{ color: "#667eea" }}>Пользовательского соглашения (оферты)</a>
+              </label>
+              <label style={{ display: "flex", alignItems: "flex-start", gap: 8, fontSize: 12, color: textColor }}>
+                <input type="checkbox" required id="acceptPrivacy" />
+                Я даю согласие на обработку персональных данных в соответствии с <a href="/privacy" target="_blank" style={{ color: "#667eea" }}>Политикой конфиденциальности</a>
+              </label>
+            </div>
             
             <button
               onClick={handleRegister}
