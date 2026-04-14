@@ -1,20 +1,19 @@
-# Используем официальный образ Node.js
 FROM node:20-alpine AS base
 
-# Устанавливаем зависимости
+# Устанавливаем Python и компиляторы для сборки canvas и других нативных модулей
+RUN apk add --no-cache python3 py3-pip make g++
+
 FROM base AS deps
 WORKDIR /app
 COPY package.json package-lock.json* ./
 RUN npm ci
 
-# Собираем приложение
 FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN npm run build
 
-# Запускаем приложение
 FROM base AS runner
 WORKDIR /app
 
