@@ -333,7 +333,7 @@ function BeforeAfter({ darkMode }: { darkMode: boolean }) {
   );
 }
 
-// ========== КОМПОНЕНТ PHOTA EDIT ==========
+// ========== КОМПОНЕНТ PHOTA EDIT (ИСПРАВЛЕННЫЙ) ==========
 function PhotaEdit({ darkMode }: { darkMode: boolean }) {
   const [uploadedImage, setUploadedImage] = useState<string | null>(null);
   const [editedImage, setEditedImage] = useState<string | null>(null);
@@ -350,25 +350,42 @@ function PhotaEdit({ darkMode }: { darkMode: boolean }) {
     setEditedImage(null);
     
     try {
+      console.log("1. Загружаем фото:", uploadedImage);
       const response = await fetch(uploadedImage);
       const blob = await response.blob();
+      console.log("2. Фото загружено, размер:", blob.size, "тип:", blob.type);
+      
       const formData = new FormData();
       formData.append("file", blob, "photo.jpg");
       formData.append("prompt", prompt);
       
+      console.log("3. Отправляем запрос в API...");
       const apiRes = await fetch("/api/phota-edit", {
         method: "POST",
         body: formData,
       });
       
+      console.log("4. Статус ответа:", apiRes.status);
       const data = await apiRes.json();
       
+      console.log("5. Полный ответ от API:", data);
+      alert("URL результата: " + data.editedImageUrl);
+      
       if (data.success) {
+        console.log("6. Успех! Устанавливаем URL:", data.editedImageUrl);
         setEditedImage(data.editedImageUrl);
+        
+        // Дополнительная проверка - загружается ли изображение
+        const img = new Image();
+        img.onload = () => console.log("7. Изображение успешно загрузилось!");
+        img.onerror = () => console.error("7. Ошибка загрузки изображения!");
+        img.src = data.editedImageUrl;
       } else {
+        console.error("6. Ошибка:", data.error);
         alert(`Ошибка: ${data.error}`);
       }
     } catch (error: any) {
+      console.error("Ошибка:", error);
       alert(`Ошибка: ${error.message}`);
     } finally {
       setLoading(false);
@@ -381,6 +398,7 @@ function PhotaEdit({ darkMode }: { darkMode: boolean }) {
       const url = URL.createObjectURL(file);
       setUploadedImage(url);
       setEditedImage(null);
+      console.log("Фото загружено:", file.name, file.size);
     }
   };
 
@@ -432,7 +450,13 @@ function PhotaEdit({ darkMode }: { darkMode: boolean }) {
         <div style={{ flex: 1 }}>
           <div style={{ fontSize: 14, fontWeight: "bold", marginBottom: 8, color: darkMode ? "#fff" : "#333" }}>Результат</div>
           {editedImage ? (
-            <img src={editedImage} alt="Результат" style={{ width: "100%", borderRadius: 12, maxHeight: 250, objectFit: "contain" }} />
+            <img 
+              src={editedImage} 
+              alt="Результат" 
+              style={{ width: "100%", borderRadius: 12, maxHeight: 250, objectFit: "contain" }}
+              onError={() => console.error("Ошибка загрузки результата:", editedImage)}
+              onLoad={() => console.log("Результат загружен!")}
+            />
           ) : (
             <div style={{
               border: `2px dashed ${darkMode ? "#555" : "#ccc"}`,
@@ -1148,7 +1172,7 @@ export default function Home() {
     "Аватар стоматолога в стиле 3D", 
     "Баннер для Instagram клиники"
   ];
-  const demoImages = ["https://s3.twcstorage.ru/images-dental/dentist-1.jpg", "https://s3.twcstorage.ru/images-dental/dentist-2.jpg", "https://s3.twcstorage.ru/images-dental/dentist-3.jpg", "https://s3.twcstorage.ru/images-dental/dentist-4.jpg"];
+  const demoImages = ["https://storage.yandexcloud.net/dental-pro-images/dentist-1.jpg", "https://storage.yandexcloud.net/dental-pro-images/dentist-2.jpg", "https://storage.yandexcloud.net/dental-pro-images/dentist-3.jpg", "https://storage.yandexcloud.net/dental-pro-images/dentist-4.jpg"];
 
   const handleFileUpload = async (type: "blood" | "xray" | "oral", file: File, setFile: (f: File | null) => void, setPreview: (url: string | null) => void) => {
     setFile(file);
@@ -1303,7 +1327,7 @@ export default function Home() {
 
       <section style={{ padding: isMobile ? "10px 15px" : "20px 20px", background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)" }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-          <img src="https://s3.twcstorage.ru/images-dental/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
+          <img src="https://storage.yandexcloud.net/dental-pro-images/dental-header.png" alt="header" style={{ width: "100%", height: "auto", borderRadius: 20 }} />
         </div>
       </section>
 
