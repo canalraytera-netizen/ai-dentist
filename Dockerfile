@@ -35,6 +35,9 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/package.json ./package.json
 COPY --from=builder /app/node_modules ./node_modules
 
+# Очистка кэша npm для уменьшения размера образа
+RUN npm cache clean --force
+
 EXPOSE 3000
 
 CMD ["npm", "run", "start"]
